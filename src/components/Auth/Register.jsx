@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import firebase from "../../firebase";
+import md5 from "md5";
+
 import {
   Grid,
   Form,
@@ -22,6 +24,7 @@ const Register = () => {
 
   const [errors, setErrors] = useState({ message: "" });
   const [loading, setLoading] = useState(false);
+  const [usersRef, setUsersRef] = useState(firebase.database().ref("users"));
 
   const { username, email, password, passwordConfirmation } = form;
 
@@ -40,7 +43,25 @@ const Register = () => {
         .createUserWithEmailAndPassword(email, password)
         .then(createdUser => {
           console.log(createdUser);
-          setLoading(false);
+
+          createdUser.user
+            .updateProfile({
+              displayName: username,
+              photoURL: `http://gravatar.com/avatar/${md5(
+                createdUser.user.email
+              )}?d=identicon`
+            })
+            .then(() => {
+              saveUser(createdUser).then(() => {
+                console.log("user saved");
+                setLoading(false);
+              });
+            })
+            .catch(err => {
+              console.error(err);
+              setLoading(false);
+              setErrors({ message: err.message });
+            });
         })
         .catch(err => {
           console.error(err);
@@ -48,6 +69,13 @@ const Register = () => {
           setErrors({ message: err.message });
         });
     }
+  };
+
+  const saveUser = createdUser => {
+    return usersRef.child(createdUser.user.uid).set({
+      name: createdUser.user.displayName,
+      avatar: createdUser.user.photoURL
+    });
   };
 
   const isFormValid = () => {
