@@ -20,7 +20,8 @@ const Register = () => {
     passwordConfirmation: ""
   });
 
-  const [errors, setErrors] = useState();
+  const [errors, setErrors] = useState({ message: "" });
+  const [loading, setLoading] = useState(false);
 
   const { username, email, password, passwordConfirmation } = form;
 
@@ -30,15 +31,21 @@ const Register = () => {
 
   const handleSubmit = event => {
     if (isFormValid()) {
+      setErrors({ message: "" });
+      setLoading(true);
+
       event.preventDefault();
       firebase
         .auth()
         .createUserWithEmailAndPassword(email, password)
         .then(createdUser => {
           console.log(createdUser);
+          setLoading(false);
         })
         .catch(err => {
           console.error(err);
+          setLoading(false);
+          setErrors({ message: err.message });
         });
     }
   };
@@ -86,6 +93,10 @@ const Register = () => {
     }
   };
 
+  const handleInputError = inputName => {
+    return errors.message.toLowerCase().includes(inputName) ? "error" : "";
+  };
+
   return (
     <Grid textAlign="center" verticalAlign="middle" className="app">
       <Grid.Column style={{ maxWidth: 450 }}>
@@ -103,6 +114,7 @@ const Register = () => {
               placeholder="Username"
               onChange={event => handleChange(event)}
               value={username}
+              className={handleInputError("username")}
               type="text"
             />
 
@@ -115,6 +127,7 @@ const Register = () => {
               onChange={event => handleChange(event)}
               value={email}
               type="email"
+              className={handleInputError("email")}
             />
 
             <Form.Input
@@ -125,6 +138,7 @@ const Register = () => {
               placeholder="password"
               onChange={event => handleChange(event)}
               value={password}
+              className={handleInputError("password")}
               type="password"
             />
 
@@ -135,16 +149,23 @@ const Register = () => {
               iconPosition="left"
               placeholder="password confirmation"
               onChange={event => handleChange(event)}
+              className={handleInputError("password")}
               value={passwordConfirmation}
               type="password"
             />
 
-            <Button color="orange" fluid size="large">
+            <Button
+              disabled={loading}
+              className={loading ? "loading" : ""}
+              color="orange"
+              fluid
+              size="large"
+            >
               Submit
             </Button>
           </Segment>
         </Form>
-        {errors && (
+        {errors.message.length > 1 && (
           <Message error>
             <h3>Error</h3>
             {displayErrors()}
