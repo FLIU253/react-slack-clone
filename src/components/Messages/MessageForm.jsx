@@ -23,13 +23,15 @@ const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
         .push()
         .set(createMessage())
         .then(() => {
-          setState({ ...state, loading: false, message: "" }).catch(err => {
-            console.error(err);
-            setState({
-              ...state,
-              loading: false,
-              errors: err
-            });
+          setState({ ...state, loading: false, message: "" });
+          console.log("message sent");
+        })
+        .catch(err => {
+          console.error(err);
+          setState({
+            ...state,
+            loading: false,
+            errors: err
           });
         });
     } else {
@@ -58,6 +60,7 @@ const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
       <Input
         fluid
         name="message"
+        value={state.message}
         style={{ marginBottom: "0.7em" }}
         label={<Button icon={"add"} />}
         labelPosition="left"
@@ -72,6 +75,7 @@ const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
           content="Add Reply"
           labelPosition="left"
           icon="edit"
+          disabled={state.loading}
         />
         <Button
           color="teal"
