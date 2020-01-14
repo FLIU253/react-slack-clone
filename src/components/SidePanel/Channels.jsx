@@ -21,7 +21,7 @@ const Channels = ({ currentUser, setCurrentChannel }) => {
     setFirstChannel();
 
     return () => removeListeners();
-  }, [state.channels]);
+  }, [state.activeChannel]);
 
   const addListeners = () => {
     let loadedChannels = [];
@@ -103,17 +103,19 @@ const Channels = ({ currentUser, setCurrentChannel }) => {
   const displayChannels = channels => {
     return (
       channels.length > 0 &&
-      channels.map(channel => (
-        <Menu.Item
-          key={channel.id}
-          onClick={() => changeChannel(channel)}
-          name={channel.name}
-          style={{ opacity: 0.7 }}
-          active={channel.id === state.activeChannel}
-        >
-          # {channel.name}
-        </Menu.Item>
-      ))
+      channels.map(channel => {
+        return (
+          <Menu.Item
+            key={channel.id}
+            onClick={() => changeChannel(channel)}
+            name={channel.name}
+            style={{ opacity: 0.7 }}
+            active={channel.id === state.activeChannel}
+          >
+            # {channel.name}
+          </Menu.Item>
+        );
+      })
     );
   };
 
