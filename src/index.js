@@ -17,18 +17,21 @@ import { createStore } from "redux";
 import { Provider, connect } from "react-redux";
 import { composeWithDevTools } from "redux-devtools-extension";
 import rootReducer from "./reducers";
-import { setUser } from "./actions";
+import { setUser, clearUser } from "./actions";
 import Spinner from "./Spinner";
 
 const store = createStore(rootReducer, composeWithDevTools());
 
-const Root = ({ history, setUser, isLoading }) => {
+const Root = ({ history, setUser, isLoading, clearUser }) => {
   useEffect(() => {
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         //console.log(user);
         setUser(user);
         history.push("/");
+      } else {
+        history.push("/login");
+        clearUser();
       }
     });
   }, []);
@@ -48,7 +51,9 @@ const mapStateToProps = state => ({
   isLoading: state.user.isLoading
 });
 
-const RootWithAuth = withRouter(connect(mapStateToProps, { setUser })(Root));
+const RootWithAuth = withRouter(
+  connect(mapStateToProps, { setUser, clearUser })(Root)
+);
 
 ReactDOM.render(
   <Provider store={store}>
