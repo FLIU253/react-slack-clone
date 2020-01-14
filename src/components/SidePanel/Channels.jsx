@@ -93,9 +93,7 @@ const Channels = ({ currentUser, setCurrentChannel }) => {
   };
 
   const setActiveChannel = channel => {
-    setTimeout(() => {
-      setState({ ...state, activeChannel: channel.id });
-    }, 200);
+    setState({ ...state, activeChannel: channel.id });
   };
 
   const openModal = () => {

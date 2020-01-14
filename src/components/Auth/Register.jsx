@@ -19,12 +19,12 @@ const Register = () => {
     username: "",
     email: "",
     password: "",
-    passwordConfirmation: ""
+    passwordConfirmation: "",
+    usersRef: useState(firebase.database().ref("users"))
   });
 
   const [errors, setErrors] = useState({ message: "" });
   const [loading, setLoading] = useState(false);
-  const [usersRef, setUsersRef] = useState(firebase.database().ref("users"));
 
   const { username, email, password, passwordConfirmation } = form;
 
@@ -73,7 +73,7 @@ const Register = () => {
   };
 
   const saveUser = createdUser => {
-    return usersRef.child(createdUser.user.uid).set({
+    return form.usersRef.child(createdUser.user.uid).set({
       name: createdUser.user.displayName,
       avatar: createdUser.user.photoURL
     });

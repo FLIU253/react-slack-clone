@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Grid, Header, Icon, Dropdown, Image } from "semantic-ui-react";
 import firebase from "../../firebase";
 
 const UserPanel = ({ currentUser }) => {
-  const [state, setState] = useState({
+  const state = {
     user: currentUser
-  });
+  };
 
   const dropdownOptions = () => [
     {
