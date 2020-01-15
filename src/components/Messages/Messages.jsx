@@ -8,6 +8,8 @@ import Message from "./Message";
 
 class Messages extends React.Component {
   state = {
+    privateChannel: this.props.isPrivateChannel,
+    privateMessagesRef: firebase.database().ref("privateMessages"),
     messagesRef: firebase.database().ref("messages"),
     messages: [],
     messagesLoading: true,
@@ -33,7 +35,8 @@ class Messages extends React.Component {
 
   addMessageListener = channelId => {
     let loadedMessages = [];
-    this.state.messagesRef.child(channelId).on("child_added", snap => {
+    const ref = this.getMessagesRef();
+    ref.child(channelId).on("child_added", snap => {
       loadedMessages.push(snap.val());
       this.setState({
         messages: loadedMessages,
@@ -41,6 +44,37 @@ class Messages extends React.Component {
       });
       this.countUniqueUsers(loadedMessages);
     });
+  };
+
+  getMessagesRef = () => {
+    const { messagesRef, privateMessagesRef, privateChannel } = this.state;
+    return privateChannel ? privateMessagesRef : messagesRef;
+  };
+
+  handleSearchChange = event => {
+    this.setState(
+      {
+        searchTerm: event.target.value,
+        searchLoading: true
+      },
+      () => this.handleSearchMessages()
+    );
+  };
+
+  handleSearchMessages = () => {
+    const channelMessages = [...this.state.messages];
+    const regex = new RegExp(this.state.searchTerm, "gi");
+    const searchResults = channelMessages.reduce((acc, message) => {
+      if (
+        (message.content && message.content.match(regex)) ||
+        message.user.name.match(regex)
+      ) {
+        acc.push(message);
+      }
+      return acc;
+    }, []);
+    this.setState({ searchResults });
+    setTimeout(() => this.setState({ searchLoading: false }), 1000);
   };
 
   countUniqueUsers = messages => {
@@ -65,40 +99,15 @@ class Messages extends React.Component {
       />
     ));
 
-  handleSearchChange = event => {
-    this.setState(
-      {
-        searchTerm: event.target.value,
-        searchLoading: true
-      },
-      () => this.handleSearchMessages()
-    );
+  displayChannelName = channel => {
+    return channel
+      ? `${this.state.privateChannel ? "@" : "#"}${channel.name}`
+      : "";
   };
-
-  handleSearchMessages = () => {
-    const channelMessages = [...this.state.messages];
-    const regex = new RegExp(this.state.searchTerm, "gi");
-    const searchResults = channelMessages.reduce((acc, message) => {
-      if (
-        (message.content && message.content.match(regex)) ||
-        message.user.name.match(regex)
-      ) {
-        acc.push(message);
-      }
-
-      return acc;
-    }, []);
-
-    this.setState({ searchResults });
-    setTimeout(() => {
-      this.setState({ searchLoading: false });
-    }, 1000);
-  };
-
-  displayChannelName = channel => (channel ? `#${channel.name}` : "");
 
   render() {
-    const { messagesRef, messages, channel, user, numUniqueUsers } = this.state;
+    // prettier-ignore
+    const { messagesRef, messages, channel, user, numUniqueUsers, searchTerm, searchResults, searchLoading, privateChannel } = this.state;
 
     return (
       <React.Fragment>
@@ -106,13 +115,14 @@ class Messages extends React.Component {
           channelName={this.displayChannelName(channel)}
           numUniqueUsers={numUniqueUsers}
           handleSearchChange={this.handleSearchChange}
-          searchLoading={this.state.searchLoading}
+          searchLoading={searchLoading}
+          isPrivateChannel={privateChannel}
         />
 
         <Segment>
           <Comment.Group className="messages">
-            {this.state.searchTerm
-              ? this.displayMessages(this.state.searchResults)
+            {searchTerm
+              ? this.displayMessages(searchResults)
               : this.displayMessages(messages)}
           </Comment.Group>
         </Segment>
@@ -121,6 +131,8 @@ class Messages extends React.Component {
           messagesRef={messagesRef}
           currentChannel={channel}
           currentUser={user}
+          isPrivateChannel={privateChannel}
+          getMessagesRef={this.getMessagesRef}
         />
       </React.Fragment>
     );

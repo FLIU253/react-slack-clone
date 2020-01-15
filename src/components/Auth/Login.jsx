@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React from "react";
 import firebase from "../../firebase";
-
 import {
   Grid,
   Form,
@@ -10,112 +9,111 @@ import {
   Message,
   Icon
 } from "semantic-ui-react";
-
 import { Link } from "react-router-dom";
 
-const Login = () => {
-  const [form, setForm] = useState({
+class Login extends React.Component {
+  state = {
     email: "",
-    password: ""
-  });
-  const [errors, setErrors] = useState({ message: "" });
-  const [loading, setLoading] = useState(false);
-
-  const { email, password } = form;
-
-  const handleChange = event => {
-    setForm({ ...form, [event.target.name]: event.target.value });
+    password: "",
+    errors: [],
+    loading: false
   };
 
-  const handleSubmit = event => {
-    event.preventDefault();
-    if (isFormValid()) {
-      setErrors({ message: "" });
-      setLoading(true);
+  displayErrors = errors =>
+    errors.map((error, i) => <p key={i}>{error.message}</p>);
 
+  handleChange = event => {
+    this.setState({ [event.target.name]: event.target.value });
+  };
+
+  handleSubmit = event => {
+    event.preventDefault();
+    if (this.isFormValid(this.state)) {
+      this.setState({ errors: [], loading: true });
       firebase
         .auth()
-        .signInWithEmailAndPassword(email, password)
+        .signInWithEmailAndPassword(this.state.email, this.state.password)
         .then(signedInUser => {
           console.log(signedInUser);
-          setLoading(false);
         })
         .catch(err => {
-          console.log(err);
-          setLoading(false);
-          setErrors({ message: err.message });
+          console.error(err);
+          this.setState({
+            errors: this.state.errors.concat(err),
+            loading: false
+          });
         });
     }
   };
 
-  const isFormValid = () => email && password;
+  isFormValid = ({ email, password }) => email && password;
 
-  const displayErrors = () => {
-    if (errors) {
-      return <p>{errors.message}</p>;
-    }
+  handleInputError = (errors, inputName) => {
+    return errors.some(error => error.message.toLowerCase().includes(inputName))
+      ? "error"
+      : "";
   };
 
-  const handleInputError = inputName => {
-    return errors.message.toLowerCase().includes(inputName) ? "error" : "";
-  };
+  render() {
+    const { email, password, errors, loading } = this.state;
 
-  return (
-    <Grid textAlign="center" verticalAlign="middle" className="app">
-      <Grid.Column style={{ maxWidth: 450 }}>
-        <Header as="h1" icon color="violet" textAlign="center">
-          <Icon name="code branch" color="violet" />
-          Login to DevChat
-        </Header>
-        <Form size="large" onSubmit={event => handleSubmit(event)}>
-          <Segment stacked>
-            <Form.Input
-              fluid
-              name="email"
-              icon="mail"
-              iconPosition="left"
-              placeholder="email address"
-              onChange={event => handleChange(event)}
-              value={email}
-              type="email"
-              className={handleInputError("email")}
-            />
+    return (
+      <Grid textAlign="center" verticalAlign="middle" className="app">
+        <Grid.Column style={{ maxWidth: 450 }}>
+          <Header as="h1" icon color="violet" textAlign="center">
+            <Icon name="code branch" color="violet" />
+            Login to DevChat
+          </Header>
+          <Form onSubmit={this.handleSubmit} size="large">
+            <Segment stacked>
+              <Form.Input
+                fluid
+                name="email"
+                icon="mail"
+                iconPosition="left"
+                placeholder="Email Address"
+                onChange={this.handleChange}
+                value={email}
+                className={this.handleInputError(errors, "email")}
+                type="email"
+              />
 
-            <Form.Input
-              fluid
-              name="password"
-              icon="lock"
-              iconPosition="left"
-              placeholder="password"
-              onChange={event => handleChange(event)}
-              value={password}
-              className={handleInputError("password")}
-              type="password"
-            />
+              <Form.Input
+                fluid
+                name="password"
+                icon="lock"
+                iconPosition="left"
+                placeholder="Password"
+                onChange={this.handleChange}
+                value={password}
+                className={this.handleInputError(errors, "password")}
+                type="password"
+              />
 
-            <Button
-              disabled={loading}
-              className={loading ? "loading" : ""}
-              color="violet"
-              fluid
-              size="large"
-            >
-              Submit
-            </Button>
-          </Segment>
-        </Form>
-        {errors.message.length > 1 && (
-          <Message error>
-            <h3>Error</h3>
-            {displayErrors()}
+              <Button
+                disabled={loading}
+                className={loading ? "loading" : ""}
+                color="violet"
+                fluid
+                size="large"
+              >
+                Submit
+              </Button>
+            </Segment>
+          </Form>
+          {errors.length > 0 && (
+            <Message error>
+              <h3>Error</h3>
+              {this.displayErrors(errors)}
+            </Message>
+          )}
+          <Message>
+            Don't have an account? <Link to="/register">Register</Link>
           </Message>
-        )}
-        <Message>
-          Don't have an account? <Link to="/register">Register</Link>
-        </Message>
-      </Grid.Column>
-    </Grid>
-  );
-};
+        </Grid.Column>
+      </Grid>
+    );
+  }
+}
 
 export default Login;

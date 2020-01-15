@@ -1,61 +1,65 @@
-import React, { useState } from "react";
-import { Modal, Input, Button, Icon } from "semantic-ui-react";
+import React from "react";
 import mime from "mime-types";
+import { Modal, Input, Button, Icon } from "semantic-ui-react";
 
-const FileModal = ({ modal, closeModal, uploadFile }) => {
-  const [state, setState] = useState({
+class FileModal extends React.Component {
+  state = {
     file: null,
-    isAuthorized: ["image/jpeg", "image/png"]
-  });
+    authorized: ["image/jpeg", "image/png"]
+  };
 
-  const addFile = event => {
+  addFile = event => {
     const file = event.target.files[0];
-
     if (file) {
-      setState({ ...state, file });
+      this.setState({ file });
     }
   };
 
-  const sendFile = () => {
-    if (state.file !== null) {
-      if (isAuthorized(state.file.name)) {
-        const metadata = { contentType: mime.lookup(state.file.name) };
-        uploadFile(state.file, metadata);
+  sendFile = () => {
+    const { file } = this.state;
+    const { uploadFile, closeModal } = this.props;
+
+    if (file !== null) {
+      if (this.isAuthorized(file.name)) {
+        const metadata = { contentType: mime.lookup(file.name) };
+        uploadFile(file, metadata);
         closeModal();
-        clearFile();
+        this.clearFile();
       }
     }
   };
 
-  const clearFile = () => setState({ ...state, file: null });
+  isAuthorized = filename =>
+    this.state.authorized.includes(mime.lookup(filename));
 
-  const isAuthorized = filename => {
-    return state.isAuthorized.includes(mime.lookup(filename));
-  };
+  clearFile = () => this.setState({ file: null });
 
-  return (
-    <Modal basic open={modal} onClose={closeModal}>
-      <Modal.Header>Select an Image File</Modal.Header>
-      <Modal.Content>
-        <Input
-          onChange={event => addFile(event)}
-          fluid
-          label="File types: jpg, png"
-          name="file"
-          type="file"
-        />
-      </Modal.Content>
-      <Modal.Actions>
-        <Button color="green" inverted onClick={sendFile}>
-          <Icon name="checkmark" /> Send
-        </Button>
+  render() {
+    const { modal, closeModal } = this.props;
 
-        <Button color="red" inverted onClick={closeModal}>
-          <Icon name="remove" /> Cancel
-        </Button>
-      </Modal.Actions>
-    </Modal>
-  );
-};
+    return (
+      <Modal basic open={modal} onClose={closeModal}>
+        <Modal.Header>Select an Image File</Modal.Header>
+        <Modal.Content>
+          <Input
+            onChange={this.addFile}
+            fluid
+            label="File types: jpg, png"
+            name="file"
+            type="file"
+          />
+        </Modal.Content>
+        <Modal.Actions>
+          <Button onClick={this.sendFile} color="green" inverted>
+            <Icon name="checkmark" /> Send
+          </Button>
+          <Button color="red" inverted onClick={closeModal}>
+            <Icon name="remove" /> Cancel
+          </Button>
+        </Modal.Actions>
+      </Modal>
+    );
+  }
+}
 
 export default FileModal;
