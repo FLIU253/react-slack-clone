@@ -11,7 +11,10 @@ import MetalPanel from "./MetalPanel/MetalPanel";
 const App = ({ currentUser, currentChannel, isPrivateChannel, userPosts }) => {
   return (
     <Grid columns="equal" className="app" style={{ background: "#eee" }}>
-      <ColorPanel />
+      <ColorPanel
+        key={currentUser && currentUser.name}
+        currentUser={currentUser}
+      />
       <SidePanel
         key={currentUser && currentUser.uid}
         currentUser={currentUser}
@@ -29,7 +32,7 @@ const App = ({ currentUser, currentChannel, isPrivateChannel, userPosts }) => {
       <Grid.Column width={4}>
         <MetalPanel
           isPrivateChannel={isPrivateChannel}
-          key={currentChannel && currentChannel.id}
+          key={currentChannel && currentChannel.name}
           userPosts={userPosts}
           currentChannel={currentChannel}
         />
