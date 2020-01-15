@@ -1,61 +1,130 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React from "react";
 import { Segment, Comment } from "semantic-ui-react";
+import firebase from "../../firebase";
+
 import MessagesHeader from "./MessagesHeader";
 import MessageForm from "./MessageForm";
-import firebase from "../../firebase";
 import Message from "./Message";
 
-const Messages = ({ currentChannel, currentUser }) => {
-  useEffect(() => {
-    if (state.channel && state.user) {
-      addListeners(state.channel.id);
-    }
-  }, []);
-
-  const [state, setState] = useState({
+class Messages extends React.Component {
+  state = {
     messagesRef: firebase.database().ref("messages"),
-    channel: currentChannel,
-    user: currentUser,
     messages: [],
-    messagesLoading: true
-  });
-
-  const addListeners = channelId => {
-    addMessageListener(channelId);
+    messagesLoading: true,
+    channel: this.props.currentChannel,
+    user: this.props.currentUser,
+    numUniqueUsers: "",
+    searchTerm: "",
+    searchLoading: false,
+    searchResults: []
   };
 
-  const addMessageListener = channelId => {
-    let loadedMessages = [];
-    state.messagesRef.child(channelId).on("child_added", snap => {
-      loadedMessages.push(snap.val());
+  componentDidMount() {
+    const { channel, user } = this.state;
 
-      setState({ ...state, messages: loadedMessages, messagesLoading: false });
+    if (channel && user) {
+      this.addListeners(channel.id);
+    }
+  }
+
+  addListeners = channelId => {
+    this.addMessageListener(channelId);
+  };
+
+  addMessageListener = channelId => {
+    let loadedMessages = [];
+    this.state.messagesRef.child(channelId).on("child_added", snap => {
+      loadedMessages.push(snap.val());
+      this.setState({
+        messages: loadedMessages,
+        messagesLoading: false
+      });
+      this.countUniqueUsers(loadedMessages);
     });
   };
 
-  const displayMessages = messages =>
+  countUniqueUsers = messages => {
+    const uniqueUsers = messages.reduce((acc, message) => {
+      if (!acc.includes(message.user.name)) {
+        acc.push(message.user.name);
+      }
+      return acc;
+    }, []);
+    const plural = uniqueUsers.length > 1 || uniqueUsers.length === 0;
+    const numUniqueUsers = `${uniqueUsers.length} user${plural ? "s" : ""}`;
+    this.setState({ numUniqueUsers });
+  };
+
+  displayMessages = messages =>
     messages.length > 0 &&
     messages.map(message => (
-      <Message key={message.timestamp} message={message} user={state.user} />
+      <Message
+        key={message.timestamp}
+        message={message}
+        user={this.state.user}
+      />
     ));
 
-  return (
-    <Fragment>
-      <MessagesHeader />
+  handleSearchChange = event => {
+    this.setState(
+      {
+        searchTerm: event.target.value,
+        searchLoading: true
+      },
+      () => this.handleSearchMessages()
+    );
+  };
 
-      <Segment>
-        <Comment.Group className="messages">
-          {displayMessages(state.messages)}
-        </Comment.Group>
-      </Segment>
+  handleSearchMessages = () => {
+    const channelMessages = [...this.state.messages];
+    const regex = new RegExp(this.state.searchTerm, "gi");
+    const searchResults = channelMessages.reduce((acc, message) => {
+      if (
+        (message.content && message.content.match(regex)) ||
+        message.user.name.match(regex)
+      ) {
+        acc.push(message);
+      }
 
-      <MessageForm
-        messagesRef={state.messagesRef}
-        currentChannel={state.channel}
-        currentUser={state.user}
-      />
-    </Fragment>
-  );
-};
+      return acc;
+    }, []);
+
+    this.setState({ searchResults });
+    setTimeout(() => {
+      this.setState({ searchLoading: false });
+    }, 1000);
+  };
+
+  displayChannelName = channel => (channel ? `#${channel.name}` : "");
+
+  render() {
+    const { messagesRef, messages, channel, user, numUniqueUsers } = this.state;
+
+    return (
+      <React.Fragment>
+        <MessagesHeader
+          channelName={this.displayChannelName(channel)}
+          numUniqueUsers={numUniqueUsers}
+          handleSearchChange={this.handleSearchChange}
+          searchLoading={this.state.searchLoading}
+        />
+
+        <Segment>
+          <Comment.Group className="messages">
+            {this.state.searchTerm
+              ? this.displayMessages(this.state.searchResults)
+              : this.displayMessages(messages)}
+          </Comment.Group>
+        </Segment>
+
+        <MessageForm
+          messagesRef={messagesRef}
+          currentChannel={channel}
+          currentUser={user}
+        />
+      </React.Fragment>
+    );
+  }
+}
 
 export default Messages;

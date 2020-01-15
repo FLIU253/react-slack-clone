@@ -4,6 +4,7 @@ import firebase from "../../firebase";
 import { Segment, Button, Input } from "semantic-ui-react";
 
 import FileModal from "./FileModal";
+import ProgressBar from "./ProgressBar";
 
 class MessageForm extends React.Component {
   state = {
@@ -165,17 +166,24 @@ class MessageForm extends React.Component {
           />
           <Button
             color="teal"
+            disabled={this.state.uploadState === "uploading"}
             onClick={this.openModal}
             content="Upload Media"
             labelPosition="right"
             icon="cloud upload"
           />
-          <FileModal
-            modal={modal}
-            closeModal={this.closeModal}
-            uploadFile={this.uploadFile}
-          />
         </Button.Group>
+
+        <FileModal
+          modal={modal}
+          closeModal={this.closeModal}
+          uploadFile={this.uploadFile}
+        />
+
+        <ProgressBar
+          uploadState={this.state.uploadState}
+          percentUploaded={this.state.percentUploaded}
+        />
       </Segment>
     );
   }
