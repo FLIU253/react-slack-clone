@@ -1,15 +1,15 @@
 import React from "react";
+import firebase from "../../firebase";
 import { connect } from "react-redux";
 import { setCurrentChannel, setPrivateChannel } from "../../actions";
 import { Menu, Icon } from "semantic-ui-react";
-import firebase from "../../firebase";
 
 class Starred extends React.Component {
   state = {
-    activeChannel: "",
-    starredChannels: [],
     user: this.props.currentUser,
-    usersRef: firebase.database().ref("users")
+    usersRef: firebase.database().ref("users"),
+    activeChannel: "",
+    starredChannels: []
   };
 
   componentDidMount() {
@@ -17,6 +17,14 @@ class Starred extends React.Component {
       this.addListeners(this.state.user.uid);
     }
   }
+
+  componentWillUnmount() {
+    this.removeListener();
+  }
+
+  removeListener = () => {
+    this.state.usersRef.child(`${this.state.user.uid}/starred`).off();
+  };
 
   addListeners = userId => {
     this.state.usersRef
@@ -82,4 +90,7 @@ class Starred extends React.Component {
   }
 }
 
-export default connect(null, { setCurrentChannel, setPrivateChannel })(Starred);
+export default connect(
+  null,
+  { setCurrentChannel, setPrivateChannel }
+)(Starred);

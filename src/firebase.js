@@ -3,7 +3,7 @@ import "firebase/auth";
 import "firebase/database";
 import "firebase/storage";
 
-var firebaseConfig = {
+var config = {
   apiKey: "AIzaSyDwNjyQHrsd-aws-yBz0w23rqGixCvsPMQ",
   authDomain: "react-slack-clone-5239b.firebaseapp.com",
   databaseURL: "https://react-slack-clone-5239b.firebaseio.com",
@@ -13,6 +13,6 @@ var firebaseConfig = {
   appId: "1:420055061478:web:70c0391574dd37d40efc27",
   measurementId: "G-Q1FJQDB12E"
 };
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(config);
 
 export default firebase;

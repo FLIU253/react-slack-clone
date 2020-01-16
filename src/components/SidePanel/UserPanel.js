@@ -1,16 +1,8 @@
 import React from "react";
 import firebase from "../../firebase";
 import AvatarEditor from "react-avatar-editor";
-import {
-  Grid,
-  Header,
-  Icon,
-  Dropdown,
-  Image,
-  Modal,
-  Input,
-  Button
-} from "semantic-ui-react";
+// prettier-ignore
+import { Grid, Header, Icon, Dropdown, Image, Modal, Input, Button } from "semantic-ui-react";
 
 class UserPanel extends React.Component {
   state = {

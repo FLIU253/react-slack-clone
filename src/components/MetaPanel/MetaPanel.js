@@ -22,6 +22,8 @@ class MetaPanel extends React.Component {
     this.setState({ activeIndex: newIndex });
   };
 
+  formatCount = num => (num > 1 || num === 0 ? `${num} posts` : `${num} post`);
+
   displayTopPosters = posts =>
     Object.entries(posts)
       .sort((a, b) => b[1] - a[1])
@@ -34,9 +36,7 @@ class MetaPanel extends React.Component {
           </List.Content>
         </List.Item>
       ))
-      .slice(0, 5);
-
-  formatCount = num => (num > 1 || num === 0 ? `${num} posts` : `${num} post`);
+      .slice(0, 2);
 
   render() {
     const { activeIndex, privateChannel, channel } = this.state;
